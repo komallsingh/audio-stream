@@ -4,13 +4,17 @@ import android.media.MediaPlayer
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.SkipNext
+import androidx.compose.material.icons.filled.SkipPrevious
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -26,23 +30,38 @@ import androidx.compose.ui.platform.LocalContext
 fun AudioPlayerScreen(){
     var isPlaying by remember{mutableStateOf(false)}
     val context= LocalContext.current
+
+    //initialising the media player
     var mediaPlayer= remember {
         MediaPlayer.create(context,R.raw.song)
     }
+
+    //releasing the resource
     DisposableEffect(Unit){
         onDispose{
             mediaPlayer.release()
         }
     }
+    //UI
     Column(
         Modifier.fillMaxSize(),
         verticalArrangement = Arrangement.Top,
         horizontalAlignment = Alignment.CenterHorizontally
     ){
-       Box(
-           Modifier.fillMaxSize(),
-           contentAlignment = Alignment.Center
-       ){
+       Row(
+           modifier=Modifier.fillMaxSize(),
+           Arrangement.SpaceBetween,
+           Alignment.CenterVertically
+       )
+       {
+           IconButton(onClick = {
+               mediaPlayer.seekTo(0)
+           }){
+               Icon(
+                   imageVector = Icons.Filled.SkipPrevious,
+                   contentDescription = "Previous"
+               )
+           }
            if(isPlaying){
                IconButton(onClick = {
                    isPlaying=false
@@ -53,17 +72,28 @@ fun AudioPlayerScreen(){
                        contentDescription = "Pause"
                    )
                }
-               }else{
-                   IconButton(onClick = {
-                       isPlaying=true
-                       mediaPlayer.start()
-                   }) {
-                       Icon(
-                           imageVector = Icons.Filled.PlayArrow,
-                           contentDescription = "Play"
-                       )
-                   }
+               }else {
+               IconButton(onClick = {
+                   isPlaying = true
+                   mediaPlayer.start()
+               }) {
+                   Icon(
+                       imageVector = Icons.Filled.PlayArrow,
+                       contentDescription = "Play"
+                   )
                }
            }
+
+        IconButton(
+            onClick = {
+                mediaPlayer.seekTo(mediaPlayer.duration)
+            }
+        ) {
+            Icon(
+                imageVector = Icons.Filled.SkipNext,
+                contentDescription = "Next"
+            )
+        }
+    }
            }
-       }
+           }
