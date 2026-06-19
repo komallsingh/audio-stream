@@ -27,18 +27,19 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 
 @Composable
-fun AudioPlayerScreen(){
-    var isPlaying by remember{mutableStateOf(false)}
-    val context= LocalContext.current
+fun AudioPlayerScreen() {
+    var isPlaying by remember { mutableStateOf(false) }
+    val context = LocalContext.current
 
     //initialising the media player
-    var mediaPlayer= remember {
-        MediaPlayer.create(context,R.raw.song)
+    var mediaPlayer = remember {
+        MediaPlayer.create(context, R.raw.song)
     }
-
+    //duration
+    val duration=mediaPlayer.duration
     //releasing the resource
-    DisposableEffect(Unit){
-        onDispose{
+    DisposableEffect(Unit) {
+        onDispose {
             mediaPlayer.release()
         }
     }
@@ -47,53 +48,60 @@ fun AudioPlayerScreen(){
         Modifier.fillMaxSize(),
         verticalArrangement = Arrangement.Top,
         horizontalAlignment = Alignment.CenterHorizontally
-    ){
-       Row(
-           modifier=Modifier.fillMaxSize(),
-           Arrangement.SpaceBetween,
-           Alignment.CenterVertically
-       )
-       {
-           IconButton(onClick = {
-               mediaPlayer.seekTo(0)
-           }){
-               Icon(
-                   imageVector = Icons.Filled.SkipPrevious,
-                   contentDescription = "Previous"
-               )
-           }
-           if(isPlaying){
-               IconButton(onClick = {
-                   isPlaying=false
-                   mediaPlayer.pause()
-               }) {
-                   Icon(
-                       imageVector = Icons.Filled.Pause,
-                       contentDescription = "Pause"
-                   )
-               }
-               }else {
-               IconButton(onClick = {
-                   isPlaying = true
-                   mediaPlayer.start()
-               }) {
-                   Icon(
-                       imageVector = Icons.Filled.PlayArrow,
-                       contentDescription = "Play"
-                   )
-               }
-           }
-
-        IconButton(
-            onClick = {
-                mediaPlayer.seekTo(mediaPlayer.duration)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxSize(),
+            Arrangement.SpaceBetween,
+            Alignment.CenterVertically
+        )
+        {
+            IconButton(onClick = {
+                mediaPlayer.seekTo(0)
+            }) {
+                Icon(
+                    imageVector = Icons.Filled.SkipPrevious,
+                    contentDescription = "Previous"
+                )
             }
-        ) {
-            Icon(
-                imageVector = Icons.Filled.SkipNext,
-                contentDescription = "Next"
+            if (isPlaying) {
+                IconButton(onClick = {
+                    isPlaying = false
+                    mediaPlayer.pause()
+                }) {
+                    Icon(
+                        imageVector = Icons.Filled.Pause,
+                        contentDescription = "Pause"
+                    )
+                }
+            } else {
+                IconButton(onClick = {
+                    isPlaying = true
+                    mediaPlayer.start()
+                }) {
+                    Icon(
+                        imageVector = Icons.Filled.PlayArrow,
+                        contentDescription = "Play"
+                    )
+                }
+            }
+
+            IconButton(
+                onClick = {
+                    mediaPlayer.seekTo(mediaPlayer.duration)
+                }
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.SkipNext,
+                    contentDescription = "Next"
+                )
+            }
+            Slider(
+                value = mediaPlayer.currentPosition.toFloat(),
+                onValueChange = {
+                    mediaPlayer.seekTo(it.toInt())
+                },
+                valueRange = 0f..duration.toFloat()
             )
         }
     }
-           }
-           }
+}
