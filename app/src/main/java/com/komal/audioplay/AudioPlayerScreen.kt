@@ -1,5 +1,6 @@
 package com.komal.audioplay
 
+import android.annotation.SuppressLint
 import android.media.MediaPlayer
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -18,21 +19,25 @@ import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import kotlinx.coroutines.delay
 
+@SuppressLint("ProduceStateDoesNotAssignValue")
 @Composable
 fun AudioPlayerScreen() {
     var isPlaying by remember { mutableStateOf(false) }
     val context = LocalContext.current
 
     //initialising the media player
-    var mediaPlayer = remember {
+    val mediaPlayer = remember {
         MediaPlayer.create(context, R.raw.song)
     }
     //duration
@@ -43,16 +48,37 @@ fun AudioPlayerScreen() {
             mediaPlayer.release()
         }
     }
+    val currentPosition by produceState(initialValue = 0) {
+        while (true) {
+            value=mediaPlayer.currentPosition
+            delay(500)
+        }
+    }
+
+    // slider position
+    var sliderPosition by remember { mutableStateOf(0f) }
+    LaunchedEffect(currentPosition) {
+        sliderPosition = currentPosition.toFloat()
+    }
     //UI
     Column(
         Modifier.fillMaxSize(),
-        verticalArrangement = Arrangement.Top,
+        verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+
+        Slider(
+            value = sliderPosition,
+            onValueChange = {
+                sliderPosition=it
+            },
+            onValueChangeFinished = {
+                mediaPlayer.seekTo(sliderPosition.toInt())
+            },
+            valueRange = 0f..duration.toFloat()
+        )
         Row(
-            modifier = Modifier.fillMaxSize(),
-            Arrangement.SpaceBetween,
-            Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically
         )
         {
             IconButton(onClick = {
@@ -95,13 +121,6 @@ fun AudioPlayerScreen() {
                     contentDescription = "Next"
                 )
             }
-            Slider(
-                value = mediaPlayer.currentPosition.toFloat(),
-                onValueChange = {
-                    mediaPlayer.seekTo(it.toInt())
-                },
-                valueRange = 0f..duration.toFloat()
-            )
         }
     }
 }
