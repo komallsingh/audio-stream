@@ -6,7 +6,9 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
@@ -30,47 +32,49 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import kotlinx.coroutines.delay
 
-@SuppressLint("ProduceStateDoesNotAssignValue")
+
 @Composable
 fun AudioPlayerScreen() {
     var isPlaying by remember { mutableStateOf(false) }
     val context = LocalContext.current
-
-    //initialising the media player
-    val mediaPlayer = remember {
+    val mediaPlayer = remember { //initialising the media player
         MediaPlayer.create(context, R.raw.song)
     }
-    //duration
-    val duration=mediaPlayer.duration
-    //releasing the resource
+    val duration = mediaPlayer.duration
+    val currentPosition by produceState(initialValue = 0) {
+        while (true) {
+            if (mediaPlayer.isPlaying) {
+                value = mediaPlayer.currentPosition
+            }
+            delay(500)
+        }
+    }
+    var sliderPosition by remember { mutableStateOf(0f) }
     DisposableEffect(Unit) {
+        mediaPlayer.setOnCompletionListener {
+            isPlaying = false
+        }
         onDispose {
             mediaPlayer.release()
         }
     }
-    val currentPosition by produceState(initialValue = 0) {
-        while (true) {
-            value=mediaPlayer.currentPosition
-            delay(500)
-        }
-    }
-
-    // slider position
-    var sliderPosition by remember { mutableStateOf(0f) }
     LaunchedEffect(currentPosition) {
         sliderPosition = currentPosition.toFloat()
     }
-    //UI
+
+
+    //--> UI
     Column(
         Modifier.fillMaxSize(),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-
+        Text("Hanuman-Chalisa.mp3")
+        Text("Duration = ${mediaPlayer.duration}")
         Slider(
             value = sliderPosition,
             onValueChange = {
-                sliderPosition=it
+                sliderPosition = it
             },
             onValueChangeFinished = {
                 mediaPlayer.seekTo(sliderPosition.toInt())
@@ -78,9 +82,13 @@ fun AudioPlayerScreen() {
             valueRange = 0f..duration.toFloat()
         )
         Row(
+            modifier=Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         )
         {
+            Text(text = formatTime(currentPosition))
+            Spacer(modifier = Modifier.weight(1f))
+            Text(text = formatTime(duration))
             IconButton(onClick = {
                 mediaPlayer.seekTo(0)
             }) {
@@ -123,4 +131,11 @@ fun AudioPlayerScreen() {
             }
         }
     }
+}
+fun formatTime(ms: Int): String {
+    val totalsec= ms/1000
+    val min=totalsec/60
+    val sec=totalsec%60
+
+    return "%02d:%02d".format(min,sec)
 }
